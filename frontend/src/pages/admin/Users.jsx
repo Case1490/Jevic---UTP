@@ -19,17 +19,29 @@ const Users = () => {
           </Link>
           <Link
             to="/admin/usuarios"
-            className="flex items-center gap-2 bg-[var(--blue-second)] rounded-full p-2"
+            className="flex items-center gap-2 p-2 bg-[var(--blue-second)] rounded-full"
           >
-            <FaUsers />
-            <span>Usuarios</span>
+            <FaUsers /> <span>Usuarios</span>
           </Link>
           <Link
             to="/admin/registrar-producto"
             className="flex items-center gap-2 p-2"
           >
+            <FaFileInvoice /> <span>Registrar Producto</span>
+          </Link>
+          <Link
+            to="/admin/lista-productos"
+            className="flex items-center gap-2 p-2"
+          >
             <FaFileInvoice />
-            <span>Registrar Producto</span>
+            <span>Ver Productos</span>
+          </Link>
+          <Link
+            to="/admin/registrar-compra"
+            className="flex items-center gap-2 p-2"
+          >
+            <FaFileInvoice />
+            <span>Registrar Compra</span>
           </Link>
         </nav>
       </aside>

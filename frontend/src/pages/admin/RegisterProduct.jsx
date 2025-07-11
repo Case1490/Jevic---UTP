@@ -1,3 +1,5 @@
+// RegisterProduct.jsx (versión actualizada sin stock ni compra)
+
 import { FaFileInvoice, FaUsers } from "react-icons/fa";
 import { GrUserWorker } from "react-icons/gr";
 import { Link } from "react-router-dom";
@@ -11,35 +13,18 @@ const RegisterProduct = () => {
   const [form, setForm] = useState({
     nombre: "",
     ubicacion_almacen: "",
-    fkid_categoria: "",
-    cantidad_compra: "",
-    precio_unitario: "",
+    categoria: "",
     fkid_proveedores: "",
   });
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const validarCampos = () => {
-    const {
-      nombre,
-      ubicacion_almacen,
-      fkid_categoria,
-      cantidad_compra,
-      precio_unitario,
-      fkid_proveedores,
-    } = form;
+    const { nombre, ubicacion_almacen, categoria, fkid_proveedores } = form;
 
-    if (Number(cantidad_compra) <= 0 || Number(precio_unitario) <= 0) {
-      alert("⚠️ Precio y cantidad deben ser mayores a cero.");
-      return false;
-    }
-
-    if (!/^[a-zA-Z0-9\s]+$/.test(nombre)) {
+    if (!/^[a-zA-ZÁÉÍÓÚáéíóúÑñ0-9\s]+$/.test(nombre)) {
       alert("⚠️ El nombre solo debe contener letras, números y espacios.");
       return false;
     }
@@ -47,22 +32,10 @@ const RegisterProduct = () => {
     if (
       !nombre.trim() ||
       !ubicacion_almacen.trim() ||
-      !fkid_categoria ||
-      !cantidad_compra ||
-      !precio_unitario ||
+      !categoria.trim() ||
       !fkid_proveedores
     ) {
       alert("⚠️ Todos los campos son obligatorios.");
-      return false;
-    }
-
-    if (
-      isNaN(fkid_categoria) ||
-      isNaN(cantidad_compra) ||
-      isNaN(precio_unitario) ||
-      isNaN(fkid_proveedores)
-    ) {
-      alert("⚠️ Categoría, Proveedor, Precio y Cantidad deben ser numéricos.");
       return false;
     }
 
@@ -74,11 +47,21 @@ const RegisterProduct = () => {
 
     if (!validarCampos()) return;
 
+    const catExistente = categorias.find((cat) => cat.marca === form.categoria);
+    const fkid_categoria = catExistente ? catExistente.id_categoria : null;
+    const nueva_categoria = catExistente ? "" : form.categoria;
+
     try {
       const res = await fetch("http://localhost:3001/api/productos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          nombre: form.nombre,
+          ubicacion_almacen: form.ubicacion_almacen,
+          fkid_proveedores: form.fkid_proveedores,
+          fkid_categoria,
+          nueva_categoria,
+        }),
       });
 
       const data = await res.json();
@@ -87,9 +70,7 @@ const RegisterProduct = () => {
         setForm({
           nombre: "",
           ubicacion_almacen: "",
-          fkid_categoria: "",
-          cantidad_compra: "",
-          precio_unitario: "",
+          categoria: "",
           fkid_proveedores: "",
         });
       } else {
@@ -128,15 +109,13 @@ const RegisterProduct = () => {
             <GrUserWorker /> <span>Proveedores</span>
           </Link>
           <Link to="/admin/usuarios" className="flex items-center gap-2 p-2">
-            <FaUsers />
-            <span>Usuarios</span>
+            <FaUsers /> <span>Usuarios</span>
           </Link>
           <Link
             to="/admin/registrar-producto"
-            className="flex items-center gap-2 bg-[var(--blue-second)] rounded-full p-2"
+            className="flex items-center gap-2 p-2 bg-[var(--blue-second)] rounded-full"
           >
-            <FaFileInvoice />
-            <span>Registrar Producto</span>
+            <FaFileInvoice /> <span>Registrar Producto</span>
           </Link>
           <Link
             to="/admin/lista-productos"
@@ -145,10 +124,16 @@ const RegisterProduct = () => {
             <FaFileInvoice />
             <span>Ver Productos</span>
           </Link>
+          <Link
+            to="/admin/registrar-compra"
+            className="flex items-center gap-2 p-2"
+          >
+            <FaFileInvoice />
+            <span>Registrar Compra</span>
+          </Link>
         </nav>
       </aside>
 
-      {/* Main dashboard */}
       <main className="flex-1 bg-gray-50 p-6">
         <h1 className="text-2xl font-bold text-[var(--blue-main)] mb-6">
           Registrar Producto
@@ -164,7 +149,6 @@ const RegisterProduct = () => {
                 name="nombre"
                 value={form.nombre}
                 onChange={handleChange}
-                placeholder="Ej: Teclado mecánico"
                 className="mt-1 w-full p-2 border border-gray-300 rounded-md"
                 required
               />
@@ -179,63 +163,27 @@ const RegisterProduct = () => {
                 name="ubicacion_almacen"
                 value={form.ubicacion_almacen}
                 onChange={handleChange}
-                placeholder="Ej: Estante A"
                 className="mt-1 w-full p-2 border border-gray-300 rounded-md"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block font-medium text-sm text-gray-700">
                 Categoría
               </label>
-              <select
-                name="fkid_categoria"
-                value={form.fkid_categoria}
+              <input
+                list="categorias"
+                name="categoria"
+                value={form.categoria}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
-                required
-              >
-                <option value="">-- Selecciona una categoría --</option>
+                className="w-full border rounded px-3 py-2"
+              />
+              <datalist id="categorias">
                 {categorias.map((cat) => (
-                  <option key={cat.id_categoria} value={cat.id_categoria}>
-                    {cat.nombre_categoria}
-                  </option>
+                  <option key={cat.id_categoria} value={cat.marca} />
                 ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Precio Unitario (S/)
-                </label>
-                <input
-                  type="number"
-                  name="precio_unitario"
-                  value={form.precio_unitario}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  min="1"
-                  className="mt-1 w-full p-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Cantidad comprada
-                </label>
-                <input
-                  type="number"
-                  name="cantidad_compra"
-                  value={form.cantidad_compra}
-                  onChange={handleChange}
-                  placeholder="0"
-                  min="1"
-                  className="mt-1 w-full p-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
+              </datalist>
             </div>
 
             <div>

@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import { pool } from "./db.js";
 import productosRoutes from "./routes/productos.routes.js";
 import catalogosRoutes from "./routes/catalogos.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+import comprasRoutes from "./routes/compras.routes.js";
 
 dotenv.config();
 
@@ -16,6 +18,8 @@ app.use(express.json());
 // ✅ Usar la ruta de productos
 app.use("/api/productos", productosRoutes);
 app.use("/api/catalogos", catalogosRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/compras", comprasRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {

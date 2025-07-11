@@ -75,22 +75,27 @@ const ListProducts = () => {
             <GrUserWorker /> <span>Proveedores</span>
           </Link>
           <Link to="/admin/usuarios" className="flex items-center gap-2 p-2">
-            <FaUsers />
-            <span>Usuarios</span>
+            <FaUsers /> <span>Usuarios</span>
           </Link>
           <Link
             to="/admin/registrar-producto"
             className="flex items-center gap-2 p-2"
           >
-            <FaFileInvoice />
-            <span>Registrar Producto</span>
+            <FaFileInvoice /> <span>Registrar Producto</span>
           </Link>
           <Link
             to="/admin/lista-productos"
-            className="flex items-center gap-2 p-2  bg-[var(--blue-second)] rounded-full"
+            className="flex items-center gap-2 p-2 bg-[var(--blue-second)] rounded-full"
           >
             <FaFileInvoice />
             <span>Ver Productos</span>
+          </Link>
+          <Link
+            to="/admin/registrar-compra"
+            className="flex items-center gap-2 p-2"
+          >
+            <FaFileInvoice />
+            <span>Registrar Compra</span>
           </Link>
         </nav>
       </aside>

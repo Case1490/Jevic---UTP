@@ -1,34 +1,37 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { MdDashboard } from "react-icons/md";
 import { FaFileInvoice, FaUsers } from "react-icons/fa";
 import { GrUserWorker } from "react-icons/gr";
-import { MdDashboard } from "react-icons/md";
 
-import Swal from "sweetalert2";
-
-const EditProduct = () => {
+const EditarProducto = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [categorias, setCategorias] = useState([]);
-  const [proveedores, setProveedores] = useState([]);
+
   const [form, setForm] = useState({
     nombre: "",
     ubicacion_almacen: "",
-    fkid_categoria: "",
+    categoria: "",
     cantidad_compra: "",
     precio_unitario: "",
     fkid_proveedores: "",
   });
 
+  const [categorias, setCategorias] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const validarCampos = () => {
     const {
       nombre,
       ubicacion_almacen,
-      fkid_categoria,
+      categoria,
       cantidad_compra,
       precio_unitario,
       fkid_proveedores,
@@ -37,7 +40,7 @@ const EditProduct = () => {
     if (
       !nombre.trim() ||
       !ubicacion_almacen.trim() ||
-      !fkid_categoria ||
+      !categoria.trim() ||
       !cantidad_compra ||
       !precio_unitario ||
       !fkid_proveedores
@@ -51,16 +54,6 @@ const EditProduct = () => {
       return false;
     }
 
-    if (
-      isNaN(fkid_categoria) ||
-      isNaN(cantidad_compra) ||
-      isNaN(precio_unitario) ||
-      isNaN(fkid_proveedores)
-    ) {
-      alert("⚠️ Categoría, proveedor, precio y cantidad deben ser numéricos.");
-      return false;
-    }
-
     return true;
   };
 
@@ -68,46 +61,39 @@ const EditProduct = () => {
     e.preventDefault();
     if (!validarCampos()) return;
 
+    const catExistente = categorias.find((cat) => cat.marca === form.categoria);
+    const fkid_categoria = catExistente ? catExistente.id_categoria : null;
+    const nueva_categoria = catExistente ? "" : form.categoria;
+
     try {
       const res = await fetch(`http://localhost:3001/api/productos/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          nombre: form.nombre,
+          ubicacion_almacen: form.ubicacion_almacen,
+          fkid_categoria,
+          nueva_categoria,
+          cantidad_compra: form.cantidad_compra,
+          precio_unitario: form.precio_unitario,
+          fkid_proveedores: form.fkid_proveedores,
+        }),
       });
 
+      const data = await res.json();
       if (res.ok) {
-        Swal.fire(
-          "Actualizado",
-          "El producto fue actualizado con éxito",
-          "success"
-        ).then(() => {
-          navigate("/admin/lista-productos");
-        });
+        alert("✅ Producto actualizado correctamente");
+        navigate("/admin/lista-productos");
       } else {
-        const data = await res.json();
-        Swal.fire("Error", data.message || "No se pudo actualizar", "error");
+        alert("❌ Error: " + data.message);
       }
-    } catch (error) {
-      alert("❌ Error de red: " + error.message);
+    } catch (err) {
+      alert("❌ Error de red: " + err.message);
     }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const resProd = await fetch(`http://localhost:3001/api/productos`);
-      const productos = await resProd.json();
-      const producto = productos.find((p) => p.id_producto === parseInt(id));
-      if (producto) {
-        setForm({
-          nombre: producto.nombre,
-          ubicacion_almacen: producto.ubicacion_almacen,
-          fkid_categoria: producto.fkid_categoria,
-          cantidad_compra: producto.cantidad_compra,
-          precio_unitario: producto.precio_unitario,
-          fkid_proveedores: producto.fkid_proveedores,
-        });
-      }
-
+    const fetchInfo = async () => {
       const resCat = await fetch(
         "http://localhost:3001/api/catalogos/categorias"
       );
@@ -116,14 +102,27 @@ const EditProduct = () => {
       );
       setCategorias(await resCat.json());
       setProveedores(await resProv.json());
-    };
 
-    fetchData();
+      const resProd = await fetch(`http://localhost:3001/api/productos`);
+      const allProds = await resProd.json();
+      const prod = allProds.find((p) => p.id_producto == id);
+
+      if (prod) {
+        setForm({
+          nombre: prod.nombre,
+          ubicacion_almacen: prod.ubicacion_almacen,
+          categoria: prod.categoria_marca,
+          cantidad_compra: prod.cantidad_compra,
+          precio_unitario: prod.precio_unitario,
+          fkid_proveedores: prod.proveedor_id || "",
+        });
+      }
+    };
+    fetchInfo();
   }, [id]);
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <aside className="bg-[var(--blue-main)] text-white p-4 space-y-6">
         <h2 className="text-xl font-bold mb-8 uppercase py-1 px-2 rounded-full">
           JevicTecnology
@@ -156,7 +155,6 @@ const EditProduct = () => {
         </nav>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 bg-gray-50 p-6">
         <h1 className="text-2xl font-bold text-[var(--blue-main)] mb-6">
           Editar Producto
@@ -172,7 +170,8 @@ const EditProduct = () => {
                 name="nombre"
                 value={form.nombre}
                 onChange={handleChange}
-                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+                className="w-full border rounded px-3 py-2"
+                required
               />
             </div>
 
@@ -185,7 +184,8 @@ const EditProduct = () => {
                 name="ubicacion_almacen"
                 value={form.ubicacion_almacen}
                 onChange={handleChange}
-                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+                className="w-full border rounded px-3 py-2"
+                required
               />
             </div>
 
@@ -193,19 +193,18 @@ const EditProduct = () => {
               <label className="block text-sm font-medium text-gray-700">
                 Categoría
               </label>
-              <select
-                name="fkid_categoria"
-                value={form.fkid_categoria}
+              <input
+                list="categorias"
+                name="categoria"
+                value={form.categoria}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">-- Selecciona una categoría --</option>
+                className="w-full border rounded px-3 py-2"
+              />
+              <datalist id="categorias">
                 {categorias.map((cat) => (
-                  <option key={cat.id_categoria} value={cat.id_categoria}>
-                    {cat.nombre_categoria || cat.marca}
-                  </option>
+                  <option key={cat.id_categoria} value={cat.marca} />
                 ))}
-              </select>
+              </datalist>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -216,23 +215,25 @@ const EditProduct = () => {
                 <input
                   type="number"
                   name="precio_unitario"
-                  min="0"
                   value={form.precio_unitario}
                   onChange={handleChange}
-                  className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full border rounded px-3 py-2"
+                  min="1"
+                  required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Cantidad comprada
+                  Cantidad Comprada
                 </label>
                 <input
                   type="number"
                   name="cantidad_compra"
-                  min="0"
                   value={form.cantidad_compra}
                   onChange={handleChange}
-                  className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full border rounded px-3 py-2"
+                  min="1"
+                  required
                 />
               </div>
             </div>
@@ -245,7 +246,8 @@ const EditProduct = () => {
                 name="fkid_proveedores"
                 value={form.fkid_proveedores}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
+                className="w-full border rounded px-3 py-2"
+                required
               >
                 <option value="">-- Selecciona un proveedor --</option>
                 {proveedores.map((prov) => (
@@ -261,7 +263,7 @@ const EditProduct = () => {
                 type="submit"
                 className="w-full bg-[var(--blue-main)] text-white font-semibold py-2 rounded-md hover:bg-[var(--blue-second)] transition"
               >
-                Actualizar producto
+                Guardar Cambios
               </button>
             </div>
           </form>
@@ -271,4 +273,4 @@ const EditProduct = () => {
   );
 };
 
-export default EditProduct;
+export default EditarProducto;

@@ -9,6 +9,7 @@ import Users from "./pages/admin/Users";
 import RegisterProduct from "./pages/admin/RegisterProduct";
 import ListProducts from "./pages/admin/ListProducts";
 import EditProduct from "./pages/admin/EditProduct";
+import RegisterShop from "./pages/admin/RegisterShop";
 
 function App() {
   return (
@@ -52,6 +53,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/registrar-compra"
+          element={
+            <ProtectedRoute role="admin">
+              <RegisterShop />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/admin/proveedores"
           element={
