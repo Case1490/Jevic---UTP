@@ -6,6 +6,7 @@ import productosRoutes from "./routes/productos.routes.js";
 import catalogosRoutes from "./routes/catalogos.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import comprasRoutes from "./routes/compras.routes.js";
+import usuariosRoutes from "./routes/usuarios.routes.js";
 
 dotenv.config();
 
@@ -15,11 +16,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// ✅ Usar la ruta de productos
+// ✅ Aplicación de las rutas
 app.use("/api/productos", productosRoutes);
 app.use("/api/catalogos", catalogosRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/compras", comprasRoutes);
+app.use("/api/usuarios", usuariosRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {
