@@ -91,27 +91,35 @@ const Users = () => {
           {usuarios.map((usuario) => (
             <div
               key={usuario.id_usuarios}
-              className="bg-white p-4 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition"
+              className="bg-white p-5 rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
             >
-              <h2 className="text-lg font-semibold text-[var(--blue-main)] mb-2">
+              {/* Nombre */}
+              <h2 className="text-lg font-semibold text-[var(--blue-main)] mb-1 capitalize tracking-wide">
                 {usuario.nombre_usu} {usuario.apellido_usu}
               </h2>
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Correo:</span> {usuario.correo}
+
+              {/* Correo */}
+              <p className="text-sm text-gray-600 mb-1">
+                <span className="font-medium text-gray-700">Correo:</span>{" "}
+                <span className="truncate">{usuario.correo}</span>
               </p>
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Rol:</span>{" "}
+
+              {/* Rol */}
+              <p className="text-sm text-gray-600 mb-3">
+                <span className="font-medium text-gray-700">Rol:</span>{" "}
                 <span
-                  className={`inline-block px-2 py-0.5 rounded-full text-white text-xs ${
+                  className={`inline-block px-2 py-0.5 rounded-full text-white text-xs font-semibold ${
                     usuario.rol === "admin" ? "bg-red-500" : "bg-green-500"
                   }`}
                 >
                   {usuario.rol}
                 </span>
               </p>
-              <div className="mt-2 flex justify-between">
+
+              {/* Botones */}
+              <div className="mt-auto flex justify-end gap-2">
                 <button
-                  className="text-sm text-blue-600 underline hover:text-blue-800 mt-2 mr-3"
+                  className="text-sm px-3 py-1 rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 transition"
                   onClick={() => {
                     setUsuarioSeleccionado(usuario);
                     setMostrarModalEditar(true);
@@ -120,7 +128,7 @@ const Users = () => {
                   Editar
                 </button>
                 <button
-                  className="text-sm text-red-600 underline hover:text-red-800"
+                  className="text-sm px-3 py-1 rounded-md border border-red-500 text-red-600 hover:bg-red-50 transition"
                   onClick={() => handleDelete(usuario.id_usuarios)}
                 >
                   Eliminar

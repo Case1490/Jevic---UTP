@@ -7,6 +7,7 @@ import catalogosRoutes from "./routes/catalogos.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import comprasRoutes from "./routes/compras.routes.js";
 import usuariosRoutes from "./routes/usuarios.routes.js";
+import proveedoresRoutes from "./routes/proveedores.routes.js";
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use("/api/catalogos", catalogosRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/compras", comprasRoutes);
 app.use("/api/usuarios", usuariosRoutes);
+app.use("/api/proveedores", proveedoresRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {
