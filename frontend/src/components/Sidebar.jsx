@@ -26,6 +26,11 @@ const Sidebar = () => {
       icon: FaFileInvoice,
       label: "Registrar Compra",
     },
+    {
+      path: "/admin/historial-compras",
+      icon: FaFileInvoice,
+      label: "Historial de Compras",
+    },
   ];
 
   return (

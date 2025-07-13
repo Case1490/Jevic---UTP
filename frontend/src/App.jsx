@@ -10,6 +10,7 @@ import RegisterProduct from "./pages/admin/RegisterProduct";
 import ListProducts from "./pages/admin/ListProducts";
 import EditProduct from "./pages/admin/EditProduct";
 import RegisterShop from "./pages/admin/RegisterShop";
+import PurchaseHistory from "./pages/admin/PurchaseHistory";
 
 function App() {
   return (
@@ -67,6 +68,14 @@ function App() {
           element={
             <ProtectedRoute role="admin">
               <Suppliers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/historial-compras"
+          element={
+            <ProtectedRoute role="admin">
+              <PurchaseHistory />
             </ProtectedRoute>
           }
         />
