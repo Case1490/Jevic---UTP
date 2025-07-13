@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { MdDashboard } from "react-icons/md";
-import { FaFileInvoice, FaUsers } from "react-icons/fa";
-import { GrUserWorker } from "react-icons/gr";
+import { useParams, useNavigate } from "react-router-dom";
+import Sidebar from "../../components/Sidebar";
 
 const EditarProducto = () => {
   const { id } = useParams();
@@ -123,37 +121,7 @@ const EditarProducto = () => {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="bg-[var(--blue-main)] text-white p-4 space-y-6">
-        <h2 className="text-xl font-bold mb-8 uppercase py-1 px-2 rounded-full">
-          JevicTecnology
-        </h2>
-        <nav className="space-y-4">
-          <Link to="/admin" className="flex items-center gap-2 p-2">
-            <MdDashboard /> <span>Dashboard</span>
-          </Link>
-          <Link to="/admin/proveedores" className="flex items-center gap-2 p-2">
-            <GrUserWorker /> <span>Proveedores</span>
-          </Link>
-          <Link to="/admin/usuarios" className="flex items-center gap-2 p-2">
-            <FaUsers />
-            <span>Usuarios</span>
-          </Link>
-          <Link
-            to="/admin/registrar-producto"
-            className="flex items-center gap-2 p-2"
-          >
-            <FaFileInvoice />
-            <span>Registrar Producto</span>
-          </Link>
-          <Link
-            to="/admin/lista-productos"
-            className="flex items-center gap-2 p-2 bg-[var(--blue-second)] rounded-full"
-          >
-            <FaFileInvoice />
-            <span>Ver Productos</span>
-          </Link>
-        </nav>
-      </aside>
+      <Sidebar />
 
       <main className="flex-1 bg-gray-50 p-6">
         <h1 className="text-2xl font-bold text-[var(--blue-main)] mb-6">

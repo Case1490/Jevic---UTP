@@ -11,7 +11,6 @@ const CardAdmin = ({ title, link, bgcolor, icon: Icon }) => {
           <Icon />
           <span className="text-xl">{title}</span>
         </div>
-        <span className="text-2xl font-bold">1</span>
       </div>
       <Link
         to={`/admin/${link}`}

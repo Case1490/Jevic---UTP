@@ -1,34 +1,55 @@
-import { useUser } from "../context/UserContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { MdDashboard } from "react-icons/md";
+import { GrUserWorker } from "react-icons/gr";
+import { FaUsers, FaFileInvoice } from "react-icons/fa";
 
-export default function Sidebar() {
-  const { user } = useUser();
+const Sidebar = () => {
+  const location = useLocation();
+
+  const links = [
+    { path: "/admin", icon: MdDashboard, label: "Dashboard" },
+    { path: "/admin/proveedores", icon: GrUserWorker, label: "Proveedores" },
+    { path: "/admin/usuarios", icon: FaUsers, label: "Usuarios" },
+    {
+      path: "/admin/lista-productos",
+      icon: FaFileInvoice,
+      label: "Ver Productos",
+    },
+    {
+      path: "/admin/registrar-producto",
+      icon: FaFileInvoice,
+      label: "Registrar Producto",
+    },
+
+    {
+      path: "/admin/registrar-compra",
+      icon: FaFileInvoice,
+      label: "Registrar Compra",
+    },
+  ];
 
   return (
-    <div className="w-64 h-screen bg-gray-800 text-white p-4">
-      <h2 className="text-xl font-bold mb-4">Menú</h2>
-      {user.role === "normal" && (
-        <>
-          <Link to="/kardex" className="block py-2">
-            Kardex
-          </Link>
-          <Link to="/ordenes" className="block py-2">
-            Orden de compras
-          </Link>
-          {/* Más enlaces */}
-        </>
-      )}
-      {user.role === "admin" && (
-        <>
-          <Link to="/proveedores" className="block py-2">
-            Proveedores
-          </Link>
-          <Link to="/usuarios" className="block py-2">
-            Usuarios
-          </Link>
-          {/* Más enlaces */}
-        </>
-      )}
-    </div>
+    <aside className="bg-[var(--blue-main)] text-white p-4 space-y-6">
+      <h2 className="text-xl font-bold mb-8 uppercase py-1 px-2 rounded-full">
+        JevicTecnology
+      </h2>
+      <nav className="space-y-4">
+        {links.map((item) => {
+          const isActive = location.pathname === item.path;
+          const className = `flex items-center gap-2 p-2 ${
+            isActive ? "bg-[var(--blue-second)] rounded-full" : ""
+          }`;
+
+          const Icon = item.icon;
+          return (
+            <Link key={item.path} to={item.path} className={className}>
+              <Icon /> <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
   );
-}
+};
+
+export default Sidebar;

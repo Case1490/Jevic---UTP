@@ -12,11 +12,15 @@ router.get("/resumen", async (req, res) => {
     const [[{ totalProveedores }]] = await pool.query(
       "SELECT COUNT(*) AS totalProveedores FROM proveedores"
     );
-    const [[{ totalCategorias }]] = await pool.query(
-      "SELECT COUNT(*) AS totalCategorias FROM categoria"
+    const [[{ totalUsuarios }]] = await pool.query(
+      "SELECT COUNT(*) AS totalUsuarios FROM usuarios"
     );
 
-    res.json({ totalProductos, totalProveedores, totalCategorias });
+    res.json({
+      totalProductos,
+      totalProveedores,
+      totalUsuarios,
+    });
   } catch (error) {
     console.error("Error al obtener resumen:", error);
     res.status(500).json({ message: "Error del servidor" });
@@ -45,14 +49,14 @@ router.get("/stock-bajo", async (req, res) => {
 router.get("/categorias-count", async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT c.marca AS categoria, COUNT(p.id_producto) AS cantidad
-      FROM producto p
-      JOIN categoria c ON p.fkid_categoria = c.id_categoria
-      GROUP BY c.marca
+      SELECT LOWER(c.marca) AS categoria, COUNT(p.id_producto) AS cantidad
+      FROM categoria c
+      JOIN producto p ON p.fkid_categoria = c.id_categoria
+      GROUP BY LOWER(c.marca)
     `);
     res.json(rows);
   } catch (error) {
-    console.error("Error al obtener resumen por categoría:", error);
+    console.error("Error al obtener conteo de categorías:", error);
     res.status(500).json({ message: "Error del servidor" });
   }
 });

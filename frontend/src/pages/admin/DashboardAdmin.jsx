@@ -1,8 +1,7 @@
-import { FaFileInvoice, FaUsers, FaBoxes, FaTags } from "react-icons/fa";
+import { FaUsers, FaBoxes } from "react-icons/fa";
 import { GrUserWorker } from "react-icons/gr";
-import { Link } from "react-router-dom";
-import { MdDashboard } from "react-icons/md";
 import CardAdmin from "../../components/CardAdmin";
+import Sidebar from "../../components/Sidebar";
 
 import {
   PieChart,
@@ -20,6 +19,7 @@ const DashboardAdmin = () => {
     totalProductos: 0,
     totalProveedores: 0,
     totalCategorias: 0,
+    totalUsuarios: 0,
   });
   const [stockBajo, setStockBajo] = useState([]);
   const [categoriasData, setCategoriasData] = useState([]);
@@ -56,19 +56,6 @@ const DashboardAdmin = () => {
     fetchResumen();
   }, []);
 
-  useEffect(() => {
-    const fetchResumen = async () => {
-      try {
-        const res = await fetch("http://localhost:3001/api/dashboard/resumen");
-        const data = await res.json();
-        setResumen(data);
-      } catch (err) {
-        console.error("Error al cargar resumen:", err);
-      }
-    };
-    fetchResumen();
-  }, []);
-
   const LinksAdmin = [
     {
       title: `Productos: ${resumen.totalProductos}`,
@@ -83,13 +70,7 @@ const DashboardAdmin = () => {
       icon: GrUserWorker,
     },
     {
-      title: `Categorías: ${resumen.totalCategorias}`,
-      link: "#",
-      bgcolor: "bg-purple-500",
-      icon: FaTags,
-    },
-    {
-      title: "Usuarios",
+      title: `Usuarios: ${resumen.totalUsuarios}`,
       link: "usuarios",
       bgcolor: "bg-red-500",
       icon: FaUsers,
@@ -98,48 +79,7 @@ const DashboardAdmin = () => {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="bg-[var(--blue-main)] text-white p-4 space-y-6">
-        <h2 className="text-xl font-bold mb-8 uppercase py-1 px-2 rounded-full">
-          JevicTecnology
-        </h2>
-        <nav className="space-y-4">
-          <Link
-            to="/admin"
-            className="flex items-center gap-2 p-2 bg-[var(--blue-second)] rounded-full"
-          >
-            <MdDashboard /> <span>Dashboard</span>
-          </Link>
-          <Link to="/admin/proveedores" className="flex items-center gap-2 p-2">
-            <GrUserWorker /> <span>Proveedores</span>
-          </Link>
-          <Link to="/admin/usuarios" className="flex items-center gap-2 p-2">
-            <FaUsers /> <span>Usuarios</span>
-          </Link>
-          <Link
-            to="/admin/registrar-producto"
-            className="flex items-center gap-2 p-2"
-          >
-            <FaFileInvoice /> <span>Registrar Producto</span>
-          </Link>
-          <Link
-            to="/admin/lista-productos"
-            className="flex items-center gap-2 p-2"
-          >
-            <FaFileInvoice />
-            <span>Ver Productos</span>
-          </Link>
-          <Link
-            to="/admin/registrar-compra"
-            className="flex items-center gap-2 p-2"
-          >
-            <FaFileInvoice />
-            <span>Registrar Compra</span>
-          </Link>
-        </nav>
-      </aside>
-
-      {/* Main content */}
+      <Sidebar />
       <main className="flex-1 bg-gray-50 p-6">
         <h1 className="text-2xl font-bold text-[var(--blue-main)] mb-6">
           Dashboard
@@ -171,7 +111,7 @@ const DashboardAdmin = () => {
 
         <div className="mt-8 bg-white rounded-xl shadow-md p-6">
           <h2 className="text-lg font-bold mb-4 text-gray-700">
-            Distribución por categoría
+            Distribución por marca
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
