@@ -8,6 +8,8 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 import comprasRoutes from "./routes/compras.routes.js";
 import usuariosRoutes from "./routes/usuarios.routes.js";
 import proveedoresRoutes from "./routes/proveedores.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+import ventasRoutes from "./routes/ventas.routes.js";
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/compras", comprasRoutes);
 app.use("/api/usuarios", usuariosRoutes);
 app.use("/api/proveedores", proveedoresRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/ventas", ventasRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {

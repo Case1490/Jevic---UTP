@@ -1,7 +1,6 @@
 import { useUser } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-
 import Logo from "../../assets/Logo_dark.png";
 
 export default function Login() {
@@ -10,18 +9,43 @@ export default function Login() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (username === "admin" && password === "admin123") {
-      setUser({ username, role: "admin" });
-      navigate("/admin");
-    } else if (username === "user" && password === "user123") {
-      setUser({ username, role: "normal" });
-      navigate("/");
-    } else {
-      alert("Credenciales incorrectas");
+    try {
+      const res = await fetch("http://localhost:3001/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert("❌ " + (data.message || "Credenciales incorrectas"));
+      } else {
+        setUser({
+          name: data.name, // 👈 este es el nombre real (nombre_usu)
+          role: data.role,
+        });
+
+        if (data.role === "admin") {
+          navigate("/admin");
+        } else if (data.role === "normal") {
+          navigate("/");
+        } else {
+          alert("⚠️ Rol no reconocido: " + data.role);
+        }
+      }
+    } catch (err) {
+      alert("❌ Error de conexión: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,25 +58,31 @@ export default function Login() {
         <div className="w-[120px] m-auto my-4">
           <img src={Logo} alt="JevicTecnology" className="w-full" />
         </div>
+
         <input
           type="text"
           placeholder="Usuario"
           className="w-full bg-white placeholder:text-black mb-2 p-2 border rounded-full outline-none"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          required
         />
+
         <input
           type="password"
           placeholder="Contraseña"
           className="w-full bg-white placeholder:text-black mb-4 p-2 border rounded-full outline-none"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
+
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded-full"
+          disabled={loading}
+          className="w-full bg-blue-500 text-white py-2 rounded-full hover:bg-blue-600"
         >
-          Entrar
+          {loading ? "Ingresando..." : "Entrar"}
         </button>
       </form>
     </div>

@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/auth/Login";
-import Kardex from "./pages/user/Kardex";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import HomeRedirect from "./pages/Home/HomeRedirect";
 import DashboardAdmin from "./pages/admin/DashboardAdmin";
@@ -18,16 +17,6 @@ function App() {
       <Routes>
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/login" element={<Login />} />
-
-        {/* Usuario normal */}
-        <Route
-          path="/kardex"
-          element={
-            <ProtectedRoute role="normal">
-              <Kardex />
-            </ProtectedRoute>
-          }
-        />
 
         {/* Admin */}
         <Route
