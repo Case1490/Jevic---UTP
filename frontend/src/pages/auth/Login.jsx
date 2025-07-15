@@ -30,7 +30,8 @@ export default function Login() {
         alert("❌ " + (data.message || "Credenciales incorrectas"));
       } else {
         setUser({
-          name: data.name, // 👈 este es el nombre real (nombre_usu)
+          id: data.id_usuarios,
+          name: data.name,
           role: data.role,
         });
 

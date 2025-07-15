@@ -10,6 +10,7 @@ import ListProducts from "./pages/admin/ListProducts";
 import EditProduct from "./pages/admin/EditProduct";
 import RegisterShop from "./pages/admin/RegisterShop";
 import PurchaseHistory from "./pages/admin/PurchaseHistory";
+import RegisterSale from "./pages/admin/RegisterSale";
 
 function App() {
   return (
@@ -81,6 +82,14 @@ function App() {
           element={
             <ProtectedRoute role="admin">
               <RegisterProduct />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/registrar-venta"
+          element={
+            <ProtectedRoute role="admin">
+              <RegisterSale />
             </ProtectedRoute>
           }
         />

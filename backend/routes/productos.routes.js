@@ -3,24 +3,37 @@ import { pool } from "../db.js";
 
 const router = Router();
 
+// GET - listar productos con información completa y actualizada
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT 
+    const [rows] = await pool.query(`
+      SELECT 
         p.id_producto,
         p.nombre,
         p.ubicacion_almacen,
-        p.fkid_categoria,
         c.marca AS categoria_marca,
-        p.fkid_orden_compra,
-        o.precio_unitario,
-        o.cantidad_compra,
+        (
+          SELECT SUM(cantidad_compra)
+          FROM orden_compra
+          WHERE fkid_producto = p.id_producto
+        ) AS stock_acumulado,
+        oc.precio_unitario,
+        oc.cantidad_compra,
         pr.nombre_empresa AS proveedor
       FROM producto p
       LEFT JOIN categoria c ON p.fkid_categoria = c.id_categoria
-      LEFT JOIN orden_compra o ON p.fkid_orden_compra = o.id_orden_compra
-      LEFT JOIN proveedores pr ON o.fkid_proveedores = pr.id_proveedores`
-    );
+      LEFT JOIN (
+        SELECT o.*
+        FROM orden_compra o
+        INNER JOIN (
+          SELECT MAX(id_orden_compra) AS max_id
+          FROM orden_compra
+          WHERE fkid_producto IS NOT NULL
+          GROUP BY fkid_producto
+        ) ultimas ON o.id_orden_compra = ultimas.max_id
+      ) oc ON oc.fkid_producto = p.id_producto
+      LEFT JOIN proveedores pr ON oc.fkid_proveedores = pr.id_proveedores
+    `);
 
     res.json(rows);
   } catch (error) {
@@ -28,57 +41,60 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Error del servidor" });
   }
 });
-
-// POST /productos - Registrar producto + orden_compra + posible nueva categoría
+// POST - registrar producto con orden vacía (pero proveedor sí)
 router.post("/", async (req, res) => {
-  const { nombre, ubicacion_almacen, fkid_categoria, nueva_categoria } =
-    req.body;
+  const {
+    nombre,
+    ubicacion_almacen,
+    fkid_categoria,
+    nueva_categoria,
+    fkid_proveedores,
+  } = req.body;
 
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    let categoriaId = null;
-
-    if (fkid_categoria && !isNaN(fkid_categoria)) {
-      categoriaId = fkid_categoria;
-    }
-
-    if (!categoriaId && nueva_categoria && nueva_categoria.trim() !== "") {
+    let categoriaId = fkid_categoria;
+    if (!fkid_categoria && nueva_categoria?.trim()) {
       const [existe] = await conn.query(
         "SELECT id_categoria FROM categoria WHERE marca = ?",
         [nueva_categoria.trim()]
       );
-
-      if (existe.length > 0) {
-        categoriaId = existe[0].id_categoria;
-      } else {
-        const [result] = await conn.query(
-          "INSERT INTO categoria (marca) VALUES (?)",
-          [nueva_categoria.trim()]
-        );
-        categoriaId = result.insertId;
-      }
+      categoriaId = existe.length
+        ? existe[0].id_categoria
+        : (
+            await conn.query("INSERT INTO categoria (marca) VALUES (?)", [
+              nueva_categoria.trim(),
+            ])
+          )[0].insertId;
     }
 
     if (!categoriaId) {
       throw new Error("No se pudo determinar una categoría válida.");
     }
 
-    // Registrar producto sin orden de compra
+    const [ordenResult] = await conn.query(
+      `INSERT INTO orden_compra (fecha_orden, cantidad_compra, precio_unitario, fkid_proveedores)
+   VALUES (CURDATE(), 0, 0, ?)`,
+      [fkid_proveedores]
+    );
+    const idOrden = ordenResult.insertId;
+
     const [productoResult] = await conn.query(
-      "INSERT INTO producto (nombre, ubicacion_almacen, fkid_categoria) VALUES (?, ?, ?)",
-      [nombre, ubicacion_almacen, categoriaId]
+      `INSERT INTO producto (nombre, ubicacion_almacen, fkid_categoria, fkid_orden_compra)
+       VALUES (?, ?, ?, ?)`,
+      [nombre, ubicacion_almacen, categoriaId, idOrden]
     );
 
     await conn.commit();
     res.status(201).json({
-      message: "Producto registrado exitosamente",
+      message: "✅ Producto registrado correctamente",
       productoId: productoResult.insertId,
     });
   } catch (error) {
     await conn.rollback();
-    console.error("Error al registrar producto:", error);
+    console.error("❌ Error al registrar producto:", error);
     res.status(500).json({ message: "Error del servidor: " + error.message });
   } finally {
     conn.release();
@@ -105,13 +121,15 @@ router.delete("/:id", async (req, res) => {
 
     const ordenId = producto[0].fkid_orden_compra;
 
-    // 2. Eliminar producto
+    // 2. Eliminar el producto
     await conn.query("DELETE FROM producto WHERE id_producto = ?", [id]);
 
-    // 3. Eliminar orden de compra
-    await conn.query("DELETE FROM orden_compra WHERE id_orden_compra = ?", [
-      ordenId,
-    ]);
+    // 3. Solo eliminar la orden si existe (por robustez futura)
+    if (ordenId) {
+      await conn.query("DELETE FROM orden_compra WHERE id_orden_compra = ?", [
+        ordenId,
+      ]);
+    }
 
     await conn.commit();
     res.json({
@@ -134,7 +152,7 @@ router.put("/:id", async (req, res) => {
     ubicacion_almacen,
     fkid_categoria,
     nueva_categoria,
-    cantidad_compra,
+    stock,
     precio_unitario,
     fkid_proveedores,
   } = req.body;
@@ -145,13 +163,11 @@ router.put("/:id", async (req, res) => {
 
     let categoriaId = null;
 
-    // Si viene una categoría existente (id)
     if (fkid_categoria && !isNaN(fkid_categoria)) {
       categoriaId = fkid_categoria;
     }
 
-    // Si viene una nueva categoría por texto
-    if (!categoriaId && nueva_categoria && nueva_categoria.trim() !== "") {
+    if (!categoriaId && nueva_categoria?.trim()) {
       const [existe] = await conn.query(
         "SELECT id_categoria FROM categoria WHERE marca = ?",
         [nueva_categoria.trim()]
@@ -168,31 +184,27 @@ router.put("/:id", async (req, res) => {
       }
     }
 
-    // Validar que sí hay categoría
     if (!categoriaId) {
       throw new Error("No se pudo determinar una categoría válida.");
     }
 
-    // Obtener id de orden_compra relacionado
     const [[{ fkid_orden_compra }]] = await conn.query(
       "SELECT fkid_orden_compra FROM producto WHERE id_producto = ?",
       [id]
     );
 
-    // Actualizar producto
     await conn.query(
       `UPDATE producto 
-       SET nombre = ?, ubicacion_almacen = ?, fkid_categoria = ?
+       SET nombre = ?, ubicacion_almacen = ?, fkid_categoria = ?, stock = ?
        WHERE id_producto = ?`,
-      [nombre, ubicacion_almacen, categoriaId, id]
+      [nombre, ubicacion_almacen, categoriaId, stock, id]
     );
 
-    // Actualizar orden de compra
     await conn.query(
       `UPDATE orden_compra 
        SET cantidad_compra = ?, precio_unitario = ?, fkid_proveedores = ?
        WHERE id_orden_compra = ?`,
-      [cantidad_compra, precio_unitario, fkid_proveedores, fkid_orden_compra]
+      [stock, precio_unitario, fkid_proveedores, fkid_orden_compra]
     );
 
     await conn.commit();

@@ -33,6 +33,11 @@ const Sidebar = () => {
       icon: FaFileInvoice,
       label: "Historial de Compras",
     },
+    {
+      path: "/admin/registrar-venta",
+      icon: FaFileInvoice,
+      label: "Registrar Venta",
+    },
   ];
 
   const handleLogout = () => {

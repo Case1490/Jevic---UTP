@@ -1,22 +1,13 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-
 import Swal from "sweetalert2";
+import { useProductos } from "../../context/ProductContext";
+import { useEffect } from "react";
 
 const ListProducts = () => {
-  const [productos, setProductos] = useState([]);
+  const { productos, fetchProductos } = useProductos();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchProductos = async () => {
-      const res = await fetch("http://localhost:3001/api/productos");
-      const data = await res.json();
-      console.log("🟢 Productos recibidos:", data);
-      setProductos(data);
-    };
-    fetchProductos();
-  }, []);
+  console.log(productos);
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -37,13 +28,8 @@ const ListProducts = () => {
         });
 
         if (res.ok) {
-          Swal.fire(
-            "¡Eliminado!",
-            "El producto fue eliminado correctamente.",
-            "success"
-          );
-          // Recargar la lista
-          setProductos((prev) => prev.filter((p) => p.id_producto !== id));
+          Swal.fire("¡Eliminado!", "El producto fue eliminado.", "success");
+          fetchProductos(); // 🔁 actualiza lista
         } else {
           const err = await res.json();
           Swal.fire("Error", err.message || "Error al eliminar", "error");
@@ -58,10 +44,13 @@ const ListProducts = () => {
     navigate(`/admin/editar-producto/${producto.id_producto}`);
   };
 
+  useEffect(() => {
+    fetchProductos();
+  }, []);
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-
       <div className="p-6">
         <h2 className="text-xl font-bold mb-4">Productos Registrados</h2>
         <table className="min-w-full border border-gray-300 text-sm">
@@ -85,10 +74,14 @@ const ListProducts = () => {
                 <td className="border p-2">{prod.ubicacion_almacen}</td>
                 <td className="border p-2">{prod.categoria_marca}</td>
                 <td className="border p-2 text-right">
-                  {prod.precio_unitario}
+                  {prod.precio_unitario && prod.precio_unitario !== 0
+                    ? parseFloat(prod.precio_unitario).toFixed(2)
+                    : "—"}
                 </td>
                 <td className="border p-2 text-center">
-                  {prod.cantidad_compra}
+                  {prod.stock_acumulado !== null && prod.stock_acumulado !== 0
+                    ? prod.stock_acumulado
+                    : "—"}
                 </td>
                 <td className="border p-2">{prod.proveedor}</td>
                 <td className="border p-2 text-center space-x-2">

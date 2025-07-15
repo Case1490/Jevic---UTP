@@ -13,7 +13,7 @@ router.get("/resumen", async (req, res) => {
       "SELECT COUNT(*) AS totalProveedores FROM proveedores"
     );
     const [[{ totalUsuarios }]] = await pool.query(
-      "SELECT COUNT(*) AS totalUsuarios FROM usuarios"
+      "SELECT COUNT(*) AS totalUsuarios FROM usuarios WHERE activo = 1"
     );
 
     res.json({

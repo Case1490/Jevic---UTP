@@ -19,7 +19,7 @@ router.post("/login", async (req, res) => {
 
     const user = rows[0];
     res.json({
-      id: user.id_usuarios,
+      id_usuarios: user.id_usuarios,
       name: user.nombre_usu,
       role: user.rol,
     });

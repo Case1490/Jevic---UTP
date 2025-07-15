@@ -1,24 +1,20 @@
 import { useEffect, useState } from "react";
+import { useProductos } from "../../context/ProductContext";
 import Sidebar from "../../components/Sidebar";
 
 const RegisterShop = () => {
   const [productos, setProductos] = useState([]);
-  const [proveedores, setProveedores] = useState([]);
+  const { fetchProductos } = useProductos();
   const [form, setForm] = useState({
     id_producto: "",
     cantidad_comprada: "",
     precio_unitario: "",
-    fkid_proveedores: "",
   });
 
   useEffect(() => {
     const fetchData = async () => {
       const resProd = await fetch("http://localhost:3001/api/productos");
-      const resProv = await fetch(
-        "http://localhost:3001/api/catalogos/proveedores"
-      );
       setProductos(await resProd.json());
-      setProveedores(await resProv.json());
     };
     fetchData();
   }, []);
@@ -27,28 +23,53 @@ const RegisterShop = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const validarCampos = () => {
+    const { id_producto, cantidad_comprada, precio_unitario } = form;
+
+    if (!id_producto || !cantidad_comprada || !precio_unitario) {
+      alert("⚠️ Todos los campos son obligatorios.");
+      return false;
+    }
+
+    if (parseInt(cantidad_comprada) <= 0 || parseFloat(precio_unitario) <= 0) {
+      alert("⚠️ Cantidad y precio deben ser mayores a cero.");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validarCampos()) return;
+
     try {
       const res = await fetch("http://localhost:3001/api/compras", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          id_producto: parseInt(form.id_producto),
+          cantidad_comprada: parseInt(form.cantidad_comprada),
+          precio_unitario: parseFloat(form.precio_unitario),
+        }),
       });
+
       const data = await res.json();
+
       if (res.ok) {
         alert("✅ Compra registrada y stock actualizado");
         setForm({
           id_producto: "",
           cantidad_comprada: "",
           precio_unitario: "",
-          fkid_proveedores: "",
         });
+        await fetchProductos();
       } else {
         alert("⚠️ " + data.message);
       }
     } catch (err) {
-      alert("❌ Error: " + err.message);
+      alert("❌ Error de red: " + err.message);
     }
   };
 
@@ -95,21 +116,6 @@ const RegisterShop = () => {
             step="any"
             required
           />
-
-          <select
-            name="fkid_proveedores"
-            value={form.fkid_proveedores}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded"
-          >
-            <option value="">-- Selecciona un proveedor --</option>
-            {proveedores.map((prov) => (
-              <option key={prov.id_proveedores} value={prov.id_proveedores}>
-                {prov.nombre_empresa}
-              </option>
-            ))}
-          </select>
 
           <button
             type="submit"

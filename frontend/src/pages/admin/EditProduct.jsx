@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
+import { useProductos } from "../../context/ProductContext";
 
 const EditarProducto = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { fetchProductos } = useProductos(); // ✅ necesario para actualizar el contexto
 
   const [form, setForm] = useState({
     nombre: "",
     ubicacion_almacen: "",
     categoria: "",
-    cantidad_compra: "",
+    stock: "",
     precio_unitario: "",
     fkid_proveedores: "",
   });
@@ -30,7 +32,7 @@ const EditarProducto = () => {
       nombre,
       ubicacion_almacen,
       categoria,
-      cantidad_compra,
+      stock,
       precio_unitario,
       fkid_proveedores,
     } = form;
@@ -39,7 +41,7 @@ const EditarProducto = () => {
       !nombre.trim() ||
       !ubicacion_almacen.trim() ||
       !categoria.trim() ||
-      !cantidad_compra ||
+      !stock ||
       !precio_unitario ||
       !fkid_proveedores
     ) {
@@ -47,7 +49,7 @@ const EditarProducto = () => {
       return false;
     }
 
-    if (Number(cantidad_compra) <= 0 || Number(precio_unitario) <= 0) {
+    if (Number(stock) <= 0 || Number(precio_unitario) <= 0) {
       alert("⚠️ Precio y cantidad deben ser mayores a cero.");
       return false;
     }
@@ -72,14 +74,15 @@ const EditarProducto = () => {
           ubicacion_almacen: form.ubicacion_almacen,
           fkid_categoria,
           nueva_categoria,
-          cantidad_compra: form.cantidad_compra,
-          precio_unitario: form.precio_unitario,
-          fkid_proveedores: form.fkid_proveedores,
+          stock: parseInt(form.stock),
+          precio_unitario: parseFloat(form.precio_unitario),
+          fkid_proveedores: parseInt(form.fkid_proveedores),
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
+        await fetchProductos(); // ✅ Actualiza la lista global
         alert("✅ Producto actualizado correctamente");
         navigate("/admin/lista-productos");
       } else {
@@ -101,7 +104,7 @@ const EditarProducto = () => {
       setCategorias(await resCat.json());
       setProveedores(await resProv.json());
 
-      const resProd = await fetch(`http://localhost:3001/api/productos`);
+      const resProd = await fetch("http://localhost:3001/api/productos");
       const allProds = await resProd.json();
       const prod = allProds.find((p) => p.id_producto == id);
 
@@ -110,9 +113,9 @@ const EditarProducto = () => {
           nombre: prod.nombre,
           ubicacion_almacen: prod.ubicacion_almacen,
           categoria: prod.categoria_marca,
-          cantidad_compra: prod.cantidad_compra,
+          stock: prod.stock,
           precio_unitario: prod.precio_unitario,
-          fkid_proveedores: prod.proveedor_id || "",
+          fkid_proveedores: prod.fkid_proveedores || "",
         });
       }
     };
@@ -122,16 +125,15 @@ const EditarProducto = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-
       <main className="flex-1 bg-gray-50 p-6">
         <h1 className="text-2xl font-bold text-[var(--blue-main)] mb-6">
           Editar Producto
         </h1>
-        <div className="col-span-4 bg-white p-6 rounded-2xl shadow-md max-w-xl">
+        <div className="bg-white p-6 rounded-2xl shadow-md max-w-xl">
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Nombre del producto
+                Nombre
               </label>
               <input
                 type="text"
@@ -139,7 +141,6 @@ const EditarProducto = () => {
                 value={form.nombre}
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2"
-                required
               />
             </div>
 
@@ -153,7 +154,6 @@ const EditarProducto = () => {
                 value={form.ubicacion_almacen}
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2"
-                required
               />
             </div>
 
@@ -187,21 +187,19 @@ const EditarProducto = () => {
                   onChange={handleChange}
                   className="w-full border rounded px-3 py-2"
                   min="1"
-                  required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Cantidad Comprada
+                  Stock
                 </label>
                 <input
                   type="number"
-                  name="cantidad_compra"
-                  value={form.cantidad_compra}
+                  name="stock"
+                  value={form.stock}
                   onChange={handleChange}
                   className="w-full border rounded px-3 py-2"
                   min="1"
-                  required
                 />
               </div>
             </div>
@@ -215,7 +213,6 @@ const EditarProducto = () => {
                 value={form.fkid_proveedores}
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2"
-                required
               >
                 <option value="">-- Selecciona un proveedor --</option>
                 {proveedores.map((prov) => (

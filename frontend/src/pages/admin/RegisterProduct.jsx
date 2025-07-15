@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-
+import { useProductos } from "../../context/ProductContext";
 import Sidebar from "../../components/Sidebar";
 
 const RegisterProduct = () => {
   const [categorias, setCategorias] = useState([]);
   const [proveedores, setProveedores] = useState([]);
+  const { fetchProductos } = useProductos();
 
   const [form, setForm] = useState({
     nombre: "",
@@ -69,6 +70,7 @@ const RegisterProduct = () => {
           categoria: "",
           fkid_proveedores: "",
         });
+        await fetchProductos();
       } else {
         alert("⚠️ Error: " + data.message);
       }

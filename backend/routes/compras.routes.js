@@ -27,34 +27,58 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST /api/compras - registrar una nueva compra y actualizar stock
+// POST - registrar nueva compra para un producto existente
 router.post("/", async (req, res) => {
-  const { id_producto, cantidad_comprada, precio_unitario, fkid_proveedores } =
-    req.body;
+  const { id_producto, cantidad_comprada, precio_unitario } = req.body;
 
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    // 1. Registrar en orden_compra
-    const [ordenResult] = await conn.query(
-      "INSERT INTO orden_compra (fecha_orden, cantidad_compra, precio_unitario, fkid_proveedores) VALUES (CURDATE(), ?, ?, ?)",
-      [cantidad_comprada, precio_unitario, fkid_proveedores]
+    // 1. Verificar que el producto existe y tiene proveedor asignado
+    const [[producto]] = await conn.query(
+      `SELECT p.fkid_orden_compra, o.fkid_proveedores
+       FROM producto p
+       JOIN orden_compra o ON p.fkid_orden_compra = o.id_orden_compra
+       WHERE p.id_producto = ?`,
+      [id_producto]
     );
-    const ordenId = ordenResult.insertId;
 
-    // 2. Actualizar producto con nueva orden y stock
+    if (!producto) {
+      throw new Error("Producto no encontrado.");
+    }
+
+    if (!producto.fkid_proveedores) {
+      throw new Error("El producto no tiene proveedor asignado.");
+    }
+
+    // 2. Insertar nueva orden de compra asociada al producto
+    const [nuevaOrden] = await conn.query(
+      `INSERT INTO orden_compra 
+       (fecha_orden, cantidad_compra, precio_unitario, fkid_proveedores, fkid_producto)
+       VALUES (CURDATE(), ?, ?, ?, ?)`,
+      [
+        cantidad_comprada,
+        precio_unitario,
+        producto.fkid_proveedores,
+        id_producto,
+      ]
+    );
+
+    // 3. Actualizar el stock del producto y apuntar a la nueva orden
     await conn.query(
-      "UPDATE producto SET fkid_orden_compra = ?, stock = stock + ? WHERE id_producto = ?",
-      [ordenId, cantidad_comprada, id_producto]
+      `UPDATE producto 
+       SET stock = stock + ?, fkid_orden_compra = ?
+       WHERE id_producto = ?`,
+      [cantidad_comprada, nuevaOrden.insertId, id_producto]
     );
 
     await conn.commit();
-    res.json({ message: "Compra registrada y stock actualizado" });
-  } catch (err) {
+    res.json({ message: "✅ Compra registrada correctamente" });
+  } catch (error) {
     await conn.rollback();
-    console.error("Error al registrar compra:", err);
-    res.status(500).json({ message: "Error del servidor" });
+    console.error("❌ Error al registrar compra:", error);
+    res.status(500).json({ message: "Error del servidor: " + error.message });
   } finally {
     conn.release();
   }

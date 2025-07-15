@@ -6,7 +6,9 @@ const router = Router();
 // Obtener todos los usuarios
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM usuarios");
+    const [rows] = await pool.query(
+      "SELECT * FROM usuarios WHERE activo = true"
+    );
     res.json(rows);
   } catch (err) {
     res
@@ -63,12 +65,14 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Eliminar usuario
+// Eliminar usuario (soft delete)
 router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
   try {
-    await pool.query("DELETE FROM usuarios WHERE id_usuarios = ?", [
-      req.params.id,
-    ]);
+    await pool.query(
+      "UPDATE usuarios SET activo = false WHERE id_usuarios = ?",
+      [id]
+    );
     res.json({ message: "Usuario eliminado" });
   } catch (err) {
     res

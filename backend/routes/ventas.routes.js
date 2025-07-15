@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
     );
 
     // 3. Actualizar el stock (nombre correcto de tabla y campo)
-    await pool.query(
+    const [updateResult] = await pool.query(
       "UPDATE producto SET stock = stock - ? WHERE id_producto = ?",
       [Cantidad, fkid_producto]
     );
@@ -46,6 +46,31 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error("Error al registrar venta:", error);
     res.status(500).json({ message: "Error en el servidor" });
+  }
+});
+
+// GET /api/ventas/historial
+router.get("/historial", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        v.id_venta,
+        v.Cantidad,
+        v.Total,
+        v.MetodoPago,
+        v.fecha,
+        p.nombre AS nombre_producto,
+        u.nombre AS nombre_usuario
+      FROM venta v
+      JOIN producto p ON v.fkid_producto = p.id_producto
+      JOIN usuarios u ON v.fkid_usuario = u.id_usuarios
+      ORDER BY v.fecha DESC
+    `);
+
+    res.json(rows);
+  } catch (error) {
+    console.error("Error al obtener historial de ventas:", error);
+    res.status(500).json({ message: "Error al obtener historial" });
   }
 });
 
